@@ -14,6 +14,7 @@ extractRate = 1 # Extract every nth frame from the video
 
 # ================================================
 # Libraries
+import cv2
 import os
 import skvideo.io
 import scipy.misc
@@ -81,7 +82,7 @@ print(videoList)
 for videoNameStr in videoList:
     print("------------------------------------------------------------")
     print("Extract frames from %s"%videoNameStr)
-    vidcap = skvideo.io.VideoCapture(dataPath + "/" + videoNameStr)
+    vidcap = cv2.VideoCapture(dataPath + "/" + videoNameStr)
     outputPath = dataPath + "/" + videoNameStr.split(".")[0]
     # Generate folders to hold frames
     try:

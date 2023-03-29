@@ -1,8 +1,9 @@
-FROM ubuntu:16.04
+FROM  ubuntu:18.04 
 LABEL maintainer Maximilian A R Strobl
 # Build by using a combination of the cafe docker image (https://github.com/BVLC/caffe/tree/master/docker) and dl-docker (https://github.com/floydhub/dl-docker)
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
+ENV TZ=America/New_York 
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN     apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         cmake \
         git \
@@ -27,15 +28,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # ================================================
 # Install Caffe
-ENV CAFFE_ROOT=/opt/caffe
+ENV CAFFE_ROOT=/opt/caffe 
 WORKDIR $CAFFE_ROOT
 
 # FIXME: use ARG instead of ENV once DockerHub supports this
 # https://github.com/docker/hub-feedback/issues/460
 ENV CLONE_TAG=1.0
-
-RUN git clone -b ${CLONE_TAG} --depth 1 https://github.com/BVLC/caffe.git . && \
-    pip install --upgrade pip && \
+RUN pip install --upgrade pip && \
+    git clone -b ${CLONE_TAG} --depth 1 https://github.com/BVLC/caffe.git . && \
     cd python && for req in $(cat requirements.txt) pydot; do pip install $req; done && cd .. && \
     mkdir build && cd build && \
     cmake -DCPU_ONLY=1 .. && \
@@ -88,29 +88,35 @@ RUN apt-get update;apt-get install -y unzip
 
 # ================================================
 # Install R
-RUN echo "deb http://cran.rstudio.com/bin/linux/ubuntu xenial/" | tee -a /etc/apt/sources.list
-RUN gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
-RUN gpg -a --export E084DAB9 | apt-key add -
-RUN apt-get update;apt-get install -y r-base r-base-dev
+#RUN echo "deb http://cran.rstudio.com/bin/linux/ubuntu xenial/" | tee -a /etc/apt/sources.list
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 && \
+    add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/' && \
+    apt-get update && \
+    apt-get install -y r-base
+
 COPY install-packages.R /root/
 RUN R CMD BATCH /root/install-packages.R
 
 # ================================================
 # Install other useful Python packages using pip
-RUN pip --no-cache-dir install \
-        regex \
-        opencv-python \
+RUN pip install --upgrade pip
+RUN pip install \
+        regex==2021.11.10 \
+        opencv-python==4.2.0.32\
         lmdb
 
 # ================================================
 # Install dependencies needed for video processing
-RUN apt-get update;apt-get install -y libav-tools
-RUN pip --no-cache-dir install \
+RUN apt-get update;apt-get install -y ffmpeg
+RUN pip install \
         scikit-video
 
 # ================================================
 # Expose Ports for Ipython (8888) and ssh (22 8088 50070)
 EXPOSE 8888 22 8088 50070
 WORKDIR /workspace
+COPY . /workspace
 CMD ["/bin/bash"]
 #CMD ["sh", "-c" ,"/usr/local/bin/jupyter notebook; /bin/bash"]

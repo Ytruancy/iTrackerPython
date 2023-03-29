@@ -34,7 +34,8 @@ import multiThreadingUtils as mtUtils
 class GazeEstimator():
     def __init__(self,modelDefPath,modelWeightsPath,dataPath):
         # Load the net
-        caffe.set_mode_cpu()
+        caffe.set_mode_gpu()
+        caffe.set_device(1)
         self.net = caffe.Net(modelDefPath,modelWeightsPath,caffe.TEST)
         # Initialise other variables
         self.dataPath = dataPath
@@ -155,8 +156,8 @@ class GazeEstimator():
                 orientationVec = np.ones(len(frameList))
                 currDeviceInfoDict = {'DeviceCameraToScreenXMm': 54,
                      'DeviceCameraToScreenYMm': 8.5,
-                     'DeviceScreenWidthMm': 63,
-                     'DeviceScreenHeightMm': 111}
+                     'DeviceScreenWidthMm': 1680,
+                     'DeviceScreenHeightMm': 1080}
                 currDeviceInfoDF = pd.DataFrame(currDeviceInfoDict,
                                                 index=[1])
 
